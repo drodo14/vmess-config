@@ -1,0 +1,144 @@
+port: 7890
+socks-port: 7891
+redir-port: 7892
+mixed-port: 7893
+allow-lan: true
+bind-address: "*"
+mode: rule
+log-level: info
+ipv6: false
+
+dns:
+  enable: true
+  listen: 0.0.0.0:1053
+  default-nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  nameserver:
+    - https://dns.google/dns-query
+    - https://cloudflare-dns.com/dns-query
+  fallback:
+    - tls://1.0.0.1:853
+    - tls://8.8.4.4:853
+  fallback-filter:
+    geoip: true
+    geoip-code: ID
+
+tun:
+  enable: true
+  stack: system
+  auto-route: true
+  auto-detect-interface: true
+  mtu: 9000
+
+# ===================== PROXIES =====================
+
+proxies:
+  - name: "Drodo-TrojanWS"
+    type: trojan
+    server: 104.18.24.139
+    port: 443
+    password: 6e1be706-da03-4643-9cff-37dbfb8833ec
+    udp: true
+    sni: id1.servercepat.net
+    alpn:
+      - h2
+      - http/1.1
+    network: ws
+    tls: true
+    skip-cert-verify: false
+    ws-opts:
+      path: "/trojan-ws"
+      headers:
+        Host: id1.servercepat.net
+
+# ===================== PROXY GROUPS =====================
+
+proxy-groups:
+  - name: PROXY
+    type: select
+    proxies:
+      - Drodo-TrojanWS
+      - AUTO
+      - DIRECT
+
+  - name: AUTO
+    type: url-test
+    proxies:
+      - Drodo-TrojanWS
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+
+  - name: NETFLIX
+    type: select
+    proxies:
+      - PROXY
+      - DIRECT
+
+  - name: YOUTUBE
+    type: select
+    proxies:
+      - PROXY
+      - DIRECT
+
+  - name: GAME
+    type: select
+    proxies:
+      - DIRECT
+      - PROXY
+
+  - name: GLOBAL
+    type: select
+    proxies:
+      - PROXY
+      - DIRECT
+
+  - name: DIRECT
+    type: direct
+
+  - name: REJECT
+    type: reject
+
+# ===================== RULE-PROVIDERS =====================
+
+rule-providers:
+  ads:
+    type: http
+    behavior: classical
+    interval: 86400
+    path: ./rules/ads.yaml
+    url: https://anti-ad.net/clash.yaml
+
+  streaming:
+    type: http
+    behavior: classical
+    interval: 86400
+    path: ./rules/streaming.yaml
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo-lite/stream.yaml
+
+  game:
+    type: http
+    behavior: classical
+    interval: 86400
+    path: ./rules/game.yaml
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo-lite/game.yaml
+
+  global:
+    type: http
+    behavior: classical
+    interval: 86400
+    path: ./rules/global.yaml
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo-lite/global.yaml
+
+# ===================== RULES =====================
+
+rules:
+  - RULE-SET,ads,REJECT
+  - RULE-SET,streaming,NETFLIX
+  - RULE-SET,game,GAME
+  - RULE-SET,global,GLOBAL
+  - GEOIP,ID,DIRECT
+  - GEOIP,CN,DIRECT
+  - MATCH,PROXY
