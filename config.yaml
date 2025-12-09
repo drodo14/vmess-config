@@ -36,7 +36,7 @@ tun:
 # ===================== PROXIES =====================
 
 proxies:
-  - name: "Drodo-TrojanWS"
+  - name: "Drodo"
     type: trojan
     server: 104.18.24.139
     port: 443
