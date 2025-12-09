@@ -1,0 +1,77 @@
+{
+  "log": {
+    "disabled": false,
+    "level": "info",
+    "timestamp": true
+  },
+  "dns": {
+    "servers": [
+      {
+        "tag": "google",
+        "address": "https://dns.google/dns-query",
+        "detour": "direct"
+      },
+      {
+        "tag": "cloudflare",
+        "address": "https://cloudflare-dns.com/dns-query",
+        "detour": "direct"
+      }
+    ],
+    "strategy": "prefer_ipv4"
+  },
+  "inbounds": [
+    {
+      "type": "mixed",
+      "listen": "::",
+      "listen_port": 7890
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "Drodo-TrojanWS",
+      "type": "trojan",
+      "server": "104.18.24.139",
+      "server_port": 443,
+      "password": "6e1be706-da03-4643-9cff-37dbfb8833ec",
+      "network": "ws",
+      "tls": {
+        "enabled": true,
+        "server_name": "id1.servercepat.net",
+        "insecure": false,
+        "alpn": ["h2", "http/1.1"]
+      },
+      "ws": {
+        "path": "/trojan-ws",
+        "headers": {
+          "Host": "id1.servercepat.net"
+        }
+      }
+    },
+    {
+      "type": "direct",
+      "tag": "direct"
+    },
+    {
+      "type": "block",
+      "tag": "block"
+    }
+  ],
+  "route": {
+    "auto_detect_interface": true,
+    "rules": [
+      {
+        "geosite": "ads",
+        "outbound": "block"
+      },
+      {
+        "geoip": "private",
+        "outbound": "direct"
+      },
+      {
+        "geoip": "id",
+        "outbound": "direct"
+      }
+    ],
+    "final": "Drodo-TrojanWS"
+  }
+}
